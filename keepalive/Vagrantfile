@@ -1,0 +1,45 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+# All Vagrant configuration is done below. The "2" in Vagrant.configure
+# configures the configuration version (we support older styles for
+# backwards compatibility). Please don't change it unless you know what
+# you're doing.
+# One ansible control center, One load balancer, 4 webnodes under the LB
+Vagrant.configure("2") do |config|
+
+#Two node CENTOS7  servers vagrant env
+
+    config.vm.define :"haproxy1" do | node1|
+        node1.vm.box ="ubuntu/trusty64"
+        node1.vm.hostname = "haproxy1"
+        node1.vm.network :private_network, ip: "10.0.0.16"
+        node1.vm.provider "virtualbox" do  |vb|
+            vb.memory ="1048"
+        end
+    end     
+
+    config.vm.define :"haproxy2" do | node2|
+        node2.vm.box ="ubuntu/trusty64"
+        node2.vm.hostname = "haproxy2"
+        node2.vm.network :private_network, ip: "10.0.0.17"
+        node2.vm.provider "virtualbox" do  |vb|
+            vb.memory ="1048"
+        end
+    end     
+
+
+    config.vm.define :"ansible" do | node3|
+        node3.vm.box ="ubuntu/trusty64"
+        node3.vm.hostname = "ansibe-mgmt"
+        node3.vm.network :private_network, ip: "10.0.0.10"
+        node3.vm.provider "virtualbox" do  |vb|
+            vb.memory ="1048"
+        end
+        node3.vm.provision "shell", path: "ansible-setup.sh"
+    end     
+
+
+        
+config.ssh.username = 'vagrant'
+config.ssh.password = 'vagrant'
+end

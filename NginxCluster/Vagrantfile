@@ -1,0 +1,55 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+# All Vagrant configuration is done below. The "2" in Vagrant.configure
+# configures the configuration version (we support older styles for
+# backwards compatibility). Please don't change it unless you know what
+# you're doing.
+# Mike-This envrionment will setup 6 VMs
+# One ansible control center, two active/passive load balancers, 4 webnodes under the LB
+Vagrant.configure("2") do |config|
+
+#Elastic LB node HAPROXY
+
+    config.vm.define :"elb-node01" do | elb_config|
+        elb_config.vm.box ="ubuntu/trusty64"
+        elb_config.vm.hostname = "elb-haproxy1"
+        elb_config.vm.network :private_network, ip: "10.0.0.16"
+        elb_config.vm.provider "virtualbox" do  |vb|
+            vb.memory ="1024"
+        end
+    end     
+
+
+    config.vm.define :"elb-node02" do | elb2_config|
+        elb2_config.vm.box ="ubuntu/trusty64"
+        elb2_config.vm.hostname = "elb-haproxy2"
+        elb2_config.vm.network :private_network, ip: "10.0.0.17"
+        elb2_config.vm.provider "virtualbox" do  |vb|
+            vb.memory ="1024"
+        end
+    end     
+#Spawn a fleet of web servers to be managed under the load balancer
+   (1..4).each do |x|
+   config.vm.define "webnode#{x}" do |webnode|
+       x += 1
+       webnode.vm.box = "ubuntu/trusty64"
+       webnode.vm.hostname = "webnode#{x}"
+       webnode.vm.network :private_network, ip: "10.0.0.3#{x}"
+       webnode.vm.provider "virtualbox" do |vb|
+           vb.memory = "512"
+       end
+    end
+  end
+
+    config.vm.define :"ansible-server" do | ansible_config|
+        ansible_config.vm.box ="ubuntu/trusty64"
+        ansible_config.vm.hostname = "ansible-mgmt"
+        ansible_config.vm.network :private_network, ip: "10.0.0.10"
+        ansible_config.vm.provider "virtualbox" do  |vb|
+            vb.memory ="1048"
+        end
+        ansible_config.vm.provision :shell, path: "ansible-setup.sh"
+    end     
+config.ssh.username = 'vagrant'
+config.ssh.password = 'vagrant'
+end

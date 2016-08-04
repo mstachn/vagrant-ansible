@@ -1,0 +1,26 @@
+---
+
+- hosts: lb
+#  become_user: root
+#  become_method: sudo
+  sudo: yes
+  gather_facts: yes
+  vars:
+     worker: "{{ ohai_hostname }}"
+
+  tasks:
+  - name: Deploy keepalived
+    apt: name=keepalived state=installed
+  # sysctl.conf requirements for keepalive
+  - sysctl: name="net.ipv4.ip_forward" value=1 sysctl_set=yes state=present
+  - sysctl: name="net.ipv4.ip_nonlocal_bind" value=1 sysctl_set=yes state=present
+
+  - name: Deploying template configs (keepalived.conf)
+    template: 
+      src: "templates/keepalived.conf.j2"
+      dest: "/etc/keepalived/keepalived.conf"
+    notify: 
+      - restart keepalived
+
+
+
