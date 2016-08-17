@@ -1,0 +1,19 @@
+- hosts: webservers
+  sudo: yes
+  serial: 1
+ 
+
+  pre_tasks:
+
+  - name:  start maintenance dropping "{{inventory_hostname}}" server out of the load balancer now.."
+    shell: echo "disable server mike-elb/{{ inventory_hostname }}" | socat stdio /var/lib/haproxy/stats
+    delegate_to: "{{ item }}"
+    with_items: "{{groups.elb}}"
+
+ 
+  post_tasks:
+
+  - name:  Maintenance COMPLETE ":" Putting  "{{inventory_hostname}}" server back into load balancer now.."
+    shell: echo "enable server mike-elb/{{ inventory_hostname }}" | socat stdio /var/lib/haproxy/stats
+    delegate_to: "{{ item }}"
+    with_items: "{{groups.elb}}"

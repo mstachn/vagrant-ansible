@@ -30,5 +30,5 @@ echo "###############################"
 echo "# MIKE ANSIBLE SERVER#"
 echo "###############################"
 echo "  #####    COMPLETE     #####"
-echo "    #                     #
+echo "    #                     #"
 

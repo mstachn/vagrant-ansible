@@ -1,0 +1,48 @@
+#Update website content with zero down time
+
+- hosts: webservers
+  sudo: yes
+  serial: 1
+  
+  pre_tasks:
+
+  - name:  Placing "{{inventory_hostname}}" out of the load balancer for maintenance
+    shell: echo "disable server mike-elb/{{inventory_hostname}}" | socat stdio /var/lib/haproxy/stats
+    delegate_to: "{{ item }}"
+    with_items: "{{groups.elb}}"
+
+  tasks:
+
+  - name: install nginx
+    apt: name=nginx state=installed
+
+  - name: write our nginx.conf
+    template: src=templates/nginx.conf.j2 dest=/etc/nginx/nginx.conf
+    notify: restart nginx
+
+  - name: write our /etc/nginx/sites-available/default
+    template: src=templates/default-site.j2 dest=/etc/nginx/sites-available/default
+    notify: restart nginx
+
+  - name: Clean wipeout of website content
+    file: path=/usr/share/nginx/html/ state=absent
+
+  - name: Create new webroot
+    file: path=/usr/share/nginx/html state=directory  
+
+  - name: deploy website content
+    unarchive: src=templates/website1/site.tar dest=/usr/share/nginx/html/ 
+
+  handlers:
+
+  - name: restart nginx
+    service: name=nginx state=restarted
+
+  post_tasks:
+
+  - name: Adding "{{inventory_hostname}}" back into the load balancer
+    shell: echo "enable server mike-elb/{{inventory_hostname}}" | socat stdio /var/lib/haproxy/stats
+    delegate_to: "{{ item }}"
+    with_items: "{{groups.elb}}"
+
+
